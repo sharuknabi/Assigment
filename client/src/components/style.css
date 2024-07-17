@@ -1,0 +1,47 @@
+/* Sticky headers */
+/* .MuiTableCell-head {
+  position: fixed;
+  top: 0;
+  background: white;
+  z-index: 1;
+} */
+
+/* Resizable columns */
+.resizable-header .header-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.resize-handle {
+  display: inline-block;
+  width: 5px;
+  height: 100%;
+  cursor: col-resize;
+  user-select: none;
+  position: absolute;
+  right: 0;
+  top: 0;
+}
+
+.isResizing {
+  background: #ccc;
+}
+
+/* Additional styling */
+.header-content {
+  display: flex;
+  align-items: center;
+}
+@media (max-width: 600px) {
+  .resizable-header {
+    font-size: 0.8rem;
+  }
+  .header-content {
+    display: flex;
+    flex-direction: column;
+  }
+  .resize-handle {
+    width: 2px;
+  }
+}
