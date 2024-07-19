@@ -1,11 +1,3 @@
-/* Sticky headers */
-/* .MuiTableCell-head {
-  position: fixed;
-  top: 0;
-  background: white;
-  z-index: 1;
-} */
-
 /* Resizable columns */
 .resizable-header .header-content {
   display: flex;
@@ -33,6 +25,7 @@
   display: flex;
   align-items: center;
 }
+
 @media (max-width: 600px) {
   .resizable-header {
     font-size: 0.8rem;
@@ -44,4 +37,39 @@
   .resize-handle {
     width: 2px;
   }
+}
+
+/* Style for sticky columns */
+.sticky-column {
+  position: sticky;
+  background: white; /* Ensure background covers any content behind */
+  z-index: 1; /* Ensure it appears above other elements */
+}
+
+/* Style for the name column */
+.sticky-name-column {
+  left: 0; /* Stick to the left side */
+}
+
+/* Style for the action column */
+.sticky-action-column {
+  right: 0; /* Stick to the right side */
+}
+
+/* Style for sticky headers */
+.sticky-header {
+  position: sticky;
+  background: white; /* Ensure background covers any content behind */
+  z-index: 1;
+  background-color: blue;
+}
+
+/* Style for the name header */
+.sticky-name-header {
+  left: 0; /* Stick to the left side */
+}
+
+/* Style for the action header */
+.sticky-action-header {
+  right: 0; /* Stick to the right side */
 }

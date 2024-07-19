@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useContext } from "react";
+import PropTypes from "prop-types";
 import { useTable, useBlockLayout, useResizeColumns } from "react-table";
 import {
   Table,
@@ -28,31 +29,15 @@ import {
   Search,
 } from "@mui/icons-material";
 import "./style.css";
+import { DataContext } from "../context/DataContext";
 
 const TableComponent = () => {
-  const [data, setData] = useState([]);
+  const { data, loading } = useContext(DataContext);
   const [openRow, setOpenRow] = useState(null);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
   const [anchorEl, setAnchorEl] = useState(null);
   const [filterConfig, setFilterConfig] = useState({ key: null, value: "" });
   const [searchQuery, setSearchQuery] = useState("");
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch("http://localhost:3000/api/data");
-        const data = await response.json();
-        setData(data);
-        setLoading(false);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
 
   const handleRowClick = (rowIndex) => {
     setOpenRow(openRow === rowIndex ? null : rowIndex);
@@ -79,12 +64,10 @@ const TableComponent = () => {
     setFilterConfig({ ...filterConfig, value: event.target.value });
   };
 
-  //handles the search state
   const handleSearchChange = (event) => {
     setSearchQuery(event.target.value);
   };
 
-  //the filteredData function filters data  based upon key
   const filteredData = data.filter((item) => {
     if (!filterConfig.key || !filterConfig.value) return true;
     return item[filterConfig.key]
@@ -93,14 +76,12 @@ const TableComponent = () => {
       .includes(filterConfig.value.toLowerCase());
   });
 
-  //function to search the table data
   const searchedData = filteredData.filter((item) => {
     return Object.values(item).some((value) =>
       value.toString().toLowerCase().includes(searchQuery.toLowerCase())
     );
   });
 
-  //this function sorts data
   const sortedData = [...searchedData].sort((a, b) => {
     if (a[sortConfig.key] < b[sortConfig.key])
       return sortConfig.direction === "asc" ? -1 : 1;
@@ -215,18 +196,36 @@ const TableComponent = () => {
                 {...headerGroup.getHeaderGroupProps()}
                 key={headerGroup.id}
               >
-                {headerGroup.headers.map((column) => (
+                {headerGroup.headers.map((column, cellIndex) => (
                   <TableCell
                     key={column.id}
                     {...column.getHeaderProps()}
-                    className="resizable-header"
+                    // className={`resizable-header ${
+                    //   columnIndex === 0
+                    //     ? "sticky-header sticky-name-header"
+                    //     : ""
+                    // } ${
+                    //   columnIndex === headerGroup.headers.length - 1
+                    //     ? "sticky-header sticky-action-header"
+                    //     : ""
+                    // }`}
                     style={{
                       borderRight: "1px solid #ccc",
                       minWidth: column.minWidth,
                       ...column.getHeaderProps().style,
                     }}
                   >
-                    <div className="header-content">
+                    <div
+                      className={`header-content ${
+                        cellIndex === 0
+                          ? "sticky-header sticky-name-header"
+                          : ""
+                      } ${
+                        cellIndex === headerGroup.headers.length - 1
+                          ? "sticky-header sticky-action-header"
+                          : ""
+                      }`}
+                    >
                       <IconButton
                         size="small"
                         onClick={() => handleSort(column.id)}
@@ -269,9 +268,17 @@ const TableComponent = () => {
                       <TableCell
                         key={cellIndex}
                         {...cell.getCellProps()}
+                        className={`${
+                          cellIndex === 0
+                            ? "sticky-column sticky-name-column"
+                            : ""
+                        }${
+                          cellIndex === row.cells.length - 1
+                            ? "sticky-column sticky-action-column"
+                            : ""
+                        }`}
                         style={{
                           ...cell.getCellProps().style,
-                          //   borderRight: "1px solid #ccc",
                         }}
                       >
                         {cellIndex === 0 ? (
@@ -348,4 +355,8 @@ const TableComponent = () => {
   );
 };
 
+TableComponent.propTypes = {
+  data: PropTypes.array.isRequired,
+  loading: PropTypes.bool.isRequired,
+};
 export default TableComponent;
