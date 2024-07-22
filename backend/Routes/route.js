@@ -1,12 +1,12 @@
 const express = require("express");
 const router = express.Router();
-const controller = require("../controller/controller");
+const controller = require("../controller/Data.Controller");
 
 //POST: CREATE NEW DATA ENTRY
-router.post("/", controller.createData);
+router.post("/create", controller.createData);
 
 //GET: GET ALL DATA
-router.get("/", controller.getData);
+// router.get("/", controller.getData);
 
 //GET: SEARCHED DATA
 router.get("/search", controller.searchData);

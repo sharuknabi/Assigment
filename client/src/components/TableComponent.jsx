@@ -1,6 +1,6 @@
-import React, { useState, useContext } from "react";
-import PropTypes from "prop-types";
-import { useTable, useBlockLayout, useResizeColumns } from "react-table";
+import * as React from "react";
+import TablePagination from "@mui/material/TablePagination";
+import SmartButtonIcon from "@mui/icons-material/SmartButton";
 import {
   Table,
   TableBody,
@@ -10,44 +10,50 @@ import {
   TableHead,
   TableRow,
   Paper,
-  Collapse,
   IconButton,
   Menu,
   MenuItem,
-  TextField,
   FormControl,
   InputLabel,
-  InputAdornment,
-  Grid,
 } from "@mui/material";
-import {
-  KeyboardArrowDown,
-  KeyboardArrowUp,
-  ArrowDownward,
-  ArrowUpward,
-  MoreVert,
-  Search,
-} from "@mui/icons-material";
-import "./style.css";
+import { ArrowDownward, ArrowUpward, MoreVert } from "@mui/icons-material";
+import { useTable, useBlockLayout, useResizeColumns } from "react-table";
 import { DataContext } from "../context/DataContext";
+import "./style.css";
+import SearchBar from "./SearchBar";
 
 const TableComponent = () => {
-  const { data, loading } = useContext(DataContext);
-  const [openRow, setOpenRow] = useState(null);
-  const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
-  const [anchorEl, setAnchorEl] = useState(null);
-  const [filterConfig, setFilterConfig] = useState({ key: null, value: "" });
-  const [searchQuery, setSearchQuery] = useState("");
+  const {
+    data,
+    loading,
+    currentPage,
+    setCurrentPage,
+    totalPages,
+    rowsPerPage,
+    setRowsPerPage,
+  } = React.useContext(DataContext);
+  const [sortConfig, setSortConfig] = React.useState({
+    key: null,
+    direction: "asc",
+  });
+  const [anchorEl, setAnchorEl] = React.useState(null);
+  const [filterConfig, setFilterConfig] = React.useState({
+    key: null,
+    value: "",
+  });
 
-  const handleRowClick = (rowIndex) => {
-    setOpenRow(openRow === rowIndex ? null : rowIndex);
+  const [expandedCells, setExpandedCells] = React.useState({});
+
+  const handleCellClick = (rowIndex, cellIndex) => {
+    setExpandedCells((prev) => ({
+      ...prev,
+      [`${rowIndex}-${cellIndex}`]: !prev[`${rowIndex}-${cellIndex}`],
+    }));
   };
 
   const handleSort = (key) => {
-    let direction = "asc";
-    if (sortConfig.key === key && sortConfig.direction === "asc") {
-      direction = "desc";
-    }
+    const direction =
+      sortConfig.key === key && sortConfig.direction === "asc" ? "desc" : "asc";
     setSortConfig({ key, direction });
   };
 
@@ -64,131 +70,107 @@ const TableComponent = () => {
     setFilterConfig({ ...filterConfig, value: event.target.value });
   };
 
-  const handleSearchChange = (event) => {
-    setSearchQuery(event.target.value);
+  const handleChangePage = (event, newPage) => {
+    setCurrentPage(newPage);
   };
 
-  const filteredData = data.filter((item) => {
-    if (!filterConfig.key || !filterConfig.value) return true;
-    return item[filterConfig.key]
-      .toString()
-      .toLowerCase()
-      .includes(filterConfig.value.toLowerCase());
-  });
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setCurrentPage(0);
+  };
 
-  const searchedData = filteredData.filter((item) => {
-    return Object.values(item).some((value) =>
-      value.toString().toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  });
+  const filteredData = React.useMemo(() => {
+    return data.filter((item) => {
+      if (!filterConfig.key || !filterConfig.value) return true;
+      return item[filterConfig.key]
+        .toString()
+        .toLowerCase()
+        .includes(filterConfig.value.toLowerCase());
+    });
+  }, [data, filterConfig]);
 
-  const sortedData = [...searchedData].sort((a, b) => {
-    if (a[sortConfig.key] < b[sortConfig.key])
-      return sortConfig.direction === "asc" ? -1 : 1;
-    if (a[sortConfig.key] > b[sortConfig.key])
-      return sortConfig.direction === "asc" ? 1 : -1;
-    return 0;
-  });
+  const sortedData = React.useMemo(() => {
+    return [...filteredData].sort((a, b) => {
+      if (a[sortConfig.key] < b[sortConfig.key])
+        return sortConfig.direction === "asc" ? -1 : 1;
+      if (a[sortConfig.key] > b[sortConfig.key])
+        return sortConfig.direction === "asc" ? 1 : -1;
+      return 0;
+    });
+  }, [filteredData, sortConfig]);
 
   const columns = React.useMemo(
     () => [
-      {
-        Header: "Name",
-        accessor: "name",
-        minWidth: 100,
-      },
-      {
-        Header: "Username",
-        accessor: "username",
-        minWidth: 100,
-      },
+      { Header: "Name", accessor: "name", minWidth: 50 },
+      { Header: "Username", accessor: "username", minWidth: 50 },
       {
         Header: "Time Order Preserved",
-        accessor: "Time Order Preserved",
-        minWidth: 100,
+        accessor: "timeOrderPreserved",
+        minWidth: 50,
       },
       {
         Header: "Ground Truth Source",
-        accessor: "Ground Truth Source",
-        minWidth: 100,
+        accessor: "groundTruthSource",
+        minWidth: 50,
       },
       {
-        Header: "Negative Assesed",
-        accessor: "Negative Assesed",
-        minWidth: 100,
+        Header: "Negative Assessed",
+        accessor: "negativeAssessed",
+        minWidth: 50,
       },
+      { Header: "Label", accessor: "label", minWidth: 100 },
       {
-        Header: "Label",
-        accessor: "Label",
-        minWidth: 100,
-      },
-      {
-        Header: "manually curated",
-        accessor: "manually curated",
-        minWidth: 100,
+        Header: "Manually Curated",
+        accessor: "manuallyCurated",
+        minWidth: 50,
       },
       {
         Header: "Source Data Nature",
-        accessor: "Source Data Nature",
-        minWidth: 100,
+        accessor: "sourceDataNature",
+        minWidth: 50,
       },
       {
-        Header: "Entity Granulaty",
-        accessor: "Entity Granulaty",
-        minWidth: 100,
+        Header: "Entity Granularity",
+        accessor: "entityGranularity",
+        minWidth: 50,
       },
       {
         Header: "Action",
-        accessor: "Action",
-        minWidth: 100,
+        accessor: "action",
+        Cell: () => <SmartButtonIcon />,
+        minWidth: 50,
       },
     ],
     []
   );
 
   const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow } =
-    useTable(
-      {
-        columns,
-        data: sortedData,
-      },
-      useBlockLayout,
-      useResizeColumns
-    );
+    useTable({ columns, data: sortedData }, useBlockLayout, useResizeColumns);
 
   if (loading) {
-    return <div>Loading...</div>; // Display loading indicator or a message
+    return <div>Loading...</div>;
   }
 
   return (
-    <>
-      <Grid
-        container
-        spacing={2}
-        alignItems="center"
-        justifyContent="flex-end"
-        style={{ marginBottom: "16px" }}
+    <div
+      style={{
+        maxWidth: "1180px",
+        margin: "0 auto",
+        marginTop: "40px",
+        fontFamily: "'Roboto', sans-serif",
+        fontSize: "14px",
+      }}
+    >
+      <SearchBar />
+      <TableContainer
+        className="tableContainer"
+        component={Paper}
+        style={{
+          maxHeight: "100%",
+          boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
+          borderRadius: "8px",
+        }}
       >
-        <Grid item xs={12} sm={3}>
-          <TextField
-            variant="outlined"
-            size="small"
-            placeholder="Search..."
-            value={searchQuery}
-            onChange={handleSearchChange}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <Search />
-                </InputAdornment>
-              ),
-            }}
-            fullWidth
-          />
-        </Grid>
-      </Grid>
-      {/* table starts from here */}
-      <TableContainer component={Paper} style={{ maxHeight: "100%" }}>
         <Table {...getTableProps()} stickyHeader>
           <TableHead>
             {headerGroups.map((headerGroup) => (
@@ -200,18 +182,18 @@ const TableComponent = () => {
                   <TableCell
                     key={column.id}
                     {...column.getHeaderProps()}
-                    // className={`resizable-header ${
-                    //   columnIndex === 0
-                    //     ? "sticky-header sticky-name-header"
-                    //     : ""
-                    // } ${
-                    //   columnIndex === headerGroup.headers.length - 1
-                    //     ? "sticky-header sticky-action-header"
-                    //     : ""
-                    // }`}
                     style={{
                       borderRight: "1px solid #ccc",
                       minWidth: column.minWidth,
+                      backgroundColor: "#f5f5f5",
+                      color: "#333",
+                      fontWeight: "bold",
+                      borderRadius:
+                        cellIndex === 0
+                          ? "8px 0 0 8px"
+                          : cellIndex === headerGroup.headers.length - 1
+                          ? "0 8px 8px 0"
+                          : "0",
                       ...column.getHeaderProps().style,
                     }}
                   >
@@ -259,67 +241,46 @@ const TableComponent = () => {
             ))}
           </TableHead>
           <TableBody {...getTableBodyProps()}>
-            {rows.map((row, index) => {
+            {rows.map((row, rowIndex) => {
               prepareRow(row);
+              const { key, ...rowProps } = row.getRowProps();
               return (
-                <React.Fragment key={index}>
-                  <TableRow onClick={() => handleRowClick(index)}>
-                    {row.cells.map((cell, cellIndex) => (
+                <TableRow key={key} {...rowProps}>
+                  {row.cells.map((cell, cellIndex) => {
+                    const { key: cellKey, ...cellProps } = cell.getCellProps();
+                    return (
                       <TableCell
-                        key={cellIndex}
-                        {...cell.getCellProps()}
+                        key={cellKey || cellIndex} // Ensure each cell has a unique key
+                        {...cellProps}
                         className={`${
                           cellIndex === 0
                             ? "sticky-column sticky-name-column"
                             : ""
-                        }${
+                        } ${
                           cellIndex === row.cells.length - 1
                             ? "sticky-column sticky-action-column"
                             : ""
                         }`}
                         style={{
                           ...cell.getCellProps().style,
+                          textOverflow: expandedCells[
+                            `${rowIndex}-${cellIndex}`
+                          ]
+                            ? "visible"
+                            : "ellipsis",
+                          overflow: "hidden",
+                          whiteSpace: expandedCells[`${rowIndex}-${cellIndex}`]
+                            ? "normal"
+                            : "nowrap",
+                          cursor: "pointer",
                         }}
+                        onClick={() => handleCellClick(rowIndex, cellIndex)}
                       >
-                        {cellIndex === 0 ? (
-                          <div
-                            style={{ display: "flex", alignItems: "center" }}
-                          >
-                            <IconButton
-                              size="small"
-                              onClick={() => handleRowClick(index)}
-                            >
-                              {openRow === index ? (
-                                <KeyboardArrowUp />
-                              ) : (
-                                <KeyboardArrowDown />
-                              )}
-                            </IconButton>
-                            {cell.render("Cell")}
-                          </div>
-                        ) : (
-                          cell.render("Cell")
-                        )}
+                        {cell.render("Cell")}
                       </TableCell>
-                    ))}
-                  </TableRow>
-                  <TableCell
-                    style={{
-                      paddingBottom: 0,
-                      paddingTop: 0,
-                      borderRight: "1px solid #ccc",
-                    }}
-                    colSpan={columns.length + 1}
-                  >
-                    <Collapse
-                      in={openRow === index}
-                      timeout="auto"
-                      unmountOnExit
-                    >
-                      <div>{row.cells[0].value}</div>
-                    </Collapse>
-                  </TableCell>
-                </React.Fragment>
+                    );
+                  })}
+                </TableRow>
               );
             })}
           </TableBody>
@@ -336,10 +297,7 @@ const TableComponent = () => {
                 label="Filter"
                 value={filterConfig.value}
                 onChange={handleFilterChange}
-                inputProps={{
-                  name: "filter",
-                  id: "filter-select",
-                }}
+                inputProps={{ name: "filter", id: "filter-select" }}
               >
                 {data.map((item, index) => (
                   <MenuItem key={index} value={item[filterConfig.key]}>
@@ -350,13 +308,17 @@ const TableComponent = () => {
             </FormControl>
           </MenuItem>
         </Menu>
+        <TablePagination
+          component="div"
+          count={totalPages * rowsPerPage}
+          page={currentPage}
+          onPageChange={handleChangePage}
+          rowsPerPage={rowsPerPage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+        />
       </TableContainer>
-    </>
+    </div>
   );
 };
 
-TableComponent.propTypes = {
-  data: PropTypes.array.isRequired,
-  loading: PropTypes.bool.isRequired,
-};
 export default TableComponent;
