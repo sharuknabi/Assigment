@@ -14,4 +14,6 @@ router.get("/search", controller.searchData);
 //GET:PAGINATED DATA
 router.get("/paginate", controller.paginateData);
 
+router.get("/check-duplicate-sno", controller.duplicate);
+
 module.exports = router;

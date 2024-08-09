@@ -1,4 +1,4 @@
-const DataModel = require("../model/Schema");
+const DataModel = require("../model/Data-Schema");
 
 // POST: Create new data entry
 exports.createData = async (req, res) => {
@@ -31,17 +31,25 @@ exports.searchData = async (req, res) => {
     const query = {};
     if (req.query.q) {
       const searchTerm = req.query.q;
+      const searchTermAsNumber = parseFloat(searchTerm);
+
       query.$or = [
-        { name: new RegExp(searchTerm, "i") },
-        { username: new RegExp(searchTerm, "i") },
-        { timeOrderPreserved: new RegExp(searchTerm, "i") },
-        { groundTruthSource: new RegExp(searchTerm, "i") },
-        { negativeAssessed: new RegExp(searchTerm, "i") },
-        { label: new RegExp(searchTerm, "i") },
-        { manuallyCurated: new RegExp(searchTerm, "i") },
-        { entityGranularity: new RegExp(searchTerm, "i") },
-        { action: new RegExp(searchTerm, "i") },
-        // Add other fields as needed
+        // String fields
+        { DATASET: new RegExp(searchTerm, "i") },
+        { Discription: new RegExp(searchTerm, "i") },
+        { KindOfTraffic: new RegExp(searchTerm, "i") },
+        { PublicallyAvailable: new RegExp(searchTerm, "i") },
+        { DOI: new RegExp(searchTerm, "i") },
+        { DownloadLinks: new RegExp(searchTerm, "i") },
+        // Number fields (only include if searchTermAsNumber is a valid number)
+        ...(isNaN(searchTermAsNumber)
+          ? []
+          : [
+              { SNo: searchTermAsNumber },
+              { Year: searchTermAsNumber },
+              { Count: searchTermAsNumber },
+              { FeatureCount: searchTermAsNumber },
+            ]),
       ];
     }
     console.log("MongoDB query:", query); // Check the constructed MongoDB query
@@ -55,18 +63,74 @@ exports.searchData = async (req, res) => {
 
 // PAGINATION: Get data entries with pagination  data/paginate
 exports.paginateData = async (req, res) => {
-  const { page = 1, limit = 10 } = req.query;
+  const { page = 1, limit = 10 } = req.query; // Default to page 1 and limit 10
   try {
-    const data = await DataModel.find()
-      .limit(limit * 1)
-      .skip((page - 1) * limit)
+    // Filter for approved data
+    const query = { approved: true };
+
+    // Fetch paginated data with the approved filter
+    const data = await DataModel.find(query) // Apply filter here
+      .limit(parseInt(limit)) // Convert limit to integer
+      .skip((parseInt(page) - 1) * parseInt(limit)) // Convert page to integer and calculate skip
       .exec();
-    const count = await DataModel.countDocuments();
+
+    // Count documents that match the filter
+    const count = await DataModel.countDocuments(query); // Count with filter
+
+    // Respond with paginated data
     res.json({
       data,
-      totalPages: Math.ceil(count / limit),
-      currentPage: page,
+      totalPages: Math.ceil(count / parseInt(limit)), // Calculate total pages
+      currentPage: parseInt(page), // Send current page number
     });
+  } catch (err) {
+    // Handle errors
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// exports.paginateData = async (req, res) => {
+//   const { page = 1, limit = 10 } = req.query;
+//   try {
+//     const query = { approved: true };
+//     const data = await DataModel.find()
+//       .limit(limit * 1)
+//       .skip((page - 1) * limit)
+//       .exec();
+//     const count = await DataModel.countDocuments();
+//     res.json({
+//       data,
+//       totalPages: Math.ceil(count / limit),
+//       currentPage: page,
+//     });
+//   } catch (err) {
+//     res.status(500).json({ message: err.message });
+//   }
+// };
+
+//api to get data based upon approval
+// exports.getData = async (req, res) => {
+//   console.log(`Authenticated User: ${req.user}`);
+//   try {
+//     // Always include the condition to filter for approved data
+//     const query = { approved: true };
+
+//     // Find data entries that match the query
+//     const data = await DataModel.find(query);
+//     res.json(data);
+//   } catch (err) {
+//     res.status(500).json({ message: err.message });
+//   }
+// };
+
+exports.duplicate = async (req, res) => {
+  try {
+    const { SNo } = req.query;
+    const existingEntry = await DataModel.findOne({ SNo });
+    if (existingEntry) {
+      return res.json({ exists: true });
+    }
+    res.json({ exists: false });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

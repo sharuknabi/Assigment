@@ -1,0 +1,115 @@
+/* DataList.css */
+
+.container {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+  position: relative;
+}
+
+.logoutButton {
+  position: absolute;
+  top: 0;
+  right: 20px;
+  border: 1 px solid gray;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  background-color: white;
+  color: blue;
+  font-size: 9px;
+  cursor: pointer;
+}
+
+.table {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr); /* Updated to 12 columns */
+  gap: 10px;
+  overflow-x: auto;
+}
+
+.tableHeader {
+  display: contents;
+  font-weight: bold;
+  border-bottom: 2px solid #ddd;
+}
+
+.headerCell {
+  padding: 10px;
+  text-align: center;
+  border-bottom: 1px solid #ddd;
+  background-color: #f4f4f4;
+}
+
+.tableBody {
+  display: contents;
+}
+
+.tableRow {
+  display: contents;
+}
+
+.tableCell {
+  padding: 10px;
+  text-align: center;
+  border-bottom: 1px solid #ddd;
+  background-color: #fff;
+}
+
+.buttonGroup {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.statusDropdown {
+  padding: 10px 20px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.statusTag {
+  padding: 5px 10px;
+  border-radius: 4px;
+  color: #fff;
+  font-size: 12px;
+}
+
+.statusTag.approved {
+  background-color: green;
+}
+
+.statusTag.rejected {
+  background-color: red;
+}
+
+.statusTag.pending {
+  background-color: grey;
+}
+
+/* Add this to your DataList.css */
+
+.tableCell.statusTag.approved {
+  background-color: green;
+  color: white;
+}
+
+.tableCell.statusTag.rejected {
+  background-color: red;
+  color: white;
+}
+
+.tableCell.statusTag.pending {
+  background-color: grey;
+  color: white;
+}
+
+.statusDropdown {
+  padding: 10px;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+}

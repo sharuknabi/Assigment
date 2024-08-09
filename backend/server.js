@@ -1,7 +1,9 @@
+require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const connectDB = require("./dbConnection/Connection");
 const router = require("./Routes/route");
+const UserRoute = require("./Routes/User-route");
 
 const app = express();
 
@@ -19,6 +21,7 @@ app.use(express.json()); // Middleware to parse JSON
 
 // Use the data routes
 app.use("/data", router);
+app.use("/api/user", UserRoute);
 
 const PORT = process.env.PORT || 3000;
 

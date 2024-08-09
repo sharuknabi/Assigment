@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Grid,
   TextField,
@@ -10,25 +10,44 @@ import {
   CircularProgress,
 } from "@mui/material";
 import axios from "axios";
+import * as yup from "yup";
+
+// Validation schema
+const schema = yup.object().shape({
+  SNo: yup.string().required("SNo is required"),
+  Year: yup.string().required("Year is required"),
+  DATASET: yup.string().required("DATASET is required"),
+  Discription: yup.string().required("Description is required"),
+  KindOfTraffic: yup.string().required("KindOfTraffic is required"),
+  PublicallyAvailable: yup.string().required("PublicallyAvailable is required"),
+  Count: yup.string().required("Count is required"),
+  FeatureCount: yup.string().required("FeatureCount is required"),
+  DOI: yup.string().required("DOI is required"),
+  DownloadLinks: yup
+    .string()
+    .url("Enter a valid URL")
+    .required("DownloadLinks is required"),
+});
 
 const DataForm = () => {
-  const [formValues, setFormValues] = React.useState({
-    name: "",
-    username: "",
-    timeOrderPreserved: "",
-    groundTruthSource: "",
-    negativeAssessed: "",
-    label: "",
-    manuallyCurated: "",
-    sourceDataNature: "",
-    entityGranularity: "",
-    action: "",
+  const [formValues, setFormValues] = useState({
+    SNo: "",
+    Year: "",
+    DATASET: "",
+    Discription: "",
+    KindOfTraffic: "",
+    PublicallyAvailable: "",
+    Count: "",
+    FeatureCount: "",
+    DOI: "",
+    DownloadLinks: "",
   });
 
-  const [openSnackbar, setOpenSnackbar] = React.useState(false);
-  const [snackbarMessage, setSnackbarMessage] = React.useState("");
-  const [snackbarSeverity, setSnackbarSeverity] = React.useState("success");
-  const [loading, setLoading] = React.useState(false); // State to handle loading
+  const [formErrors, setFormErrors] = useState({});
+  const [openSnackbar, setOpenSnackbar] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState("success");
+  const [loading, setLoading] = useState(false); // State to handle loading
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -38,45 +57,76 @@ const DataForm = () => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true); // Set loading to true when submitting
 
-    axios
-      .post("http://localhost:3000/data/create", formValues, {
-        withCredentials: true,
-        headers: {
-          "Content-Type": "application/json",
-        },
-      })
-      .then((response) => {
-        console.log("Form submitted:", response.data);
-        setSnackbarMessage("Form submitted successfully!");
-        setSnackbarSeverity("success");
+    try {
+      await schema.validate(formValues, { abortEarly: false });
+
+      // Check for duplicate SNo
+      const response = await axios.get(
+        `http://localhost:3000/data/check-duplicate-sno`,
+        {
+          params: { SNo: formValues.SNo },
+        }
+      );
+
+      if (response.data.exists) {
+        setFormErrors({ SNo: "SNo already exists" });
+        setSnackbarMessage(
+          "SNo already exists. Please choose a different SNo."
+        );
+        setSnackbarSeverity("error");
         setOpenSnackbar(true);
-        // Clear form values after submission
-        setFormValues({
-          name: "",
-          username: "",
-          timeOrderPreserved: "",
-          groundTruthSource: "",
-          negativeAssessed: "",
-          label: "",
-          manuallyCurated: "",
-          sourceDataNature: "",
-          entityGranularity: "",
-          action: "",
+        setLoading(false);
+        return;
+      }
+
+      const submitResponse = await axios.post(
+        "http://localhost:3000/data/create",
+        formValues,
+        {
+          withCredentials: true,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      console.log("Form submitted:", submitResponse.data);
+      setSnackbarMessage("Form submitted successfully!");
+      setSnackbarSeverity("success");
+      setOpenSnackbar(true);
+      // Clear form values after submission
+      setFormValues({
+        SNo: "",
+        Year: "",
+        DATASET: "",
+        Discription: "",
+        KindOfTraffic: "",
+        PublicallyAvailable: "",
+        Count: "",
+        FeatureCount: "",
+        DOI: "",
+        DownloadLinks: "",
+      });
+    } catch (error) {
+      if (error.inner) {
+        const validationErrors = {};
+        error.inner.forEach((err) => {
+          validationErrors[err.path] = err.message;
         });
-      })
-      .catch((error) => {
+        setFormErrors(validationErrors);
+      } else {
         console.error("There was an error submitting the form!", error);
         setSnackbarMessage("Error submitting the form. Please try again.");
         setSnackbarSeverity("error");
         setOpenSnackbar(true);
-      })
-      .finally(() => {
-        setLoading(false); // Set loading to false after submission
-      });
+      }
+    } finally {
+      setLoading(false); // Set loading to false after submission
+    }
   };
 
   const handleCloseSnackbar = () => {
@@ -99,6 +149,10 @@ const DataForm = () => {
                   value={formValues[key]}
                   onChange={handleChange}
                   fullWidth
+                  multiline // Make all fields a textarea
+                  rows={1} // Set the initial number of rows for the textarea
+                  error={!!formErrors[key]}
+                  helperText={formErrors[key]}
                 />
               </Grid>
             ))}

@@ -21,6 +21,8 @@ export const DataProvider = ({ children }) => {
         `http://localhost:3000/data/paginate?page=${page + 1}&limit=${limit}`
       );
       const result = await response.json();
+      // setData(result.data);
+      console.log(result.data); // Check what you get from the API
       setData(result.data);
       setTotalPages(result.totalPages); // Assuming the API returns totalPages
     } catch (error) {
