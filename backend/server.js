@@ -4,12 +4,18 @@ const cors = require("cors");
 const connectDB = require("./dbConnection/Connection");
 const router = require("./Routes/route");
 const UserRoute = require("./Routes/User-route");
+const path = require("path");
 
 const app = express();
 
+app.use(express.json());
+const _dirname = path.dirname("");
+const buildPath = path.join(_dirname, "../client/dist");
+app.use(express.static(buildPath));
+
 // CORS options
 const corsOptions = {
-  origin: "http://localhost:5173",
+  origin: "*",
   credentials: true,
 };
 
