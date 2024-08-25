@@ -7,7 +7,7 @@ const UserRoute = require("./Routes/User-route");
 const path = require("path");
 
 const app = express();
-
+//3.107.92.228
 app.use(express.json());
 const _dirname = path.dirname("");
 const buildPath = path.join(_dirname, "../client/dist");
@@ -29,8 +29,13 @@ app.use(express.json()); // Middleware to parse JSON
 app.use("/data", router);
 app.use("/api/user", UserRoute);
 
+app.get("/", (req, res) => {
+  res.send("Server is up and running!");
+});
+
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+// nano / home / ec2 - user / Assigment / backend / server.js;
