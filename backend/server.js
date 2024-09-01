@@ -4,24 +4,33 @@ const cors = require("cors");
 const connectDB = require("./dbConnection/Connection");
 const router = require("./Routes/route");
 const UserRoute = require("./Routes/User-route");
+const path = require("path");
 
 const app = express();
 
 // CORS options
-const corsOptions = {
-  origin: "http://localhost:5173",
-  credentials: true,
-};
-
-app.use(cors(corsOptions)); // Apply CORS middleware
+app.use(
+  cors({
+    origin: "*",
+  })
+);
 
 connectDB(); // Connect to the database
 
 app.use(express.json()); // Middleware to parse JSON
 
+const _dirname = path.dirname("");
+const buildPath = path.join(_dirname, "../client/dist");
+app.use(express.static(buildPath));
+
 // Use the data routes
 app.use("/data", router);
 app.use("/api/user", UserRoute);
+
+// Catch-all route to handle client-side routing
+app.get("*", (req, res) => {
+  res.sendFile(path.resolve(buildPath, "index.html"));
+});
 
 const PORT = process.env.PORT || 3000;
 
