@@ -1,4 +1,4 @@
-import React from "react";
+import React, { Suspense, lazy } from "react";
 import {
   BrowserRouter as Router,
   Route,
@@ -7,12 +7,12 @@ import {
   useLocation,
 } from "react-router-dom";
 
-import TableComponent from "./components/Data-Table";
-import DataForm from "./components/DataForm";
+const TableComponent = lazy(() => import("./components/Data-Table"));
+const DataForm = lazy(() => import("./components/DataForm"));
+const About = lazy(() => import("./components/About"));
+const DataList = lazy(() => import("./admin-page/DataList"));
+const Login = lazy(() => import("./admin-page/Login"));
 import { DataProvider } from "./context/DataContext";
-import About from "./components/About";
-import DataList from "./admin-page/DataList";
-import Login from "./admin-page/Login";
 import ProtectedRoute from "./components/auth/Protected-Route";
 
 const AppContent = () => {
@@ -65,18 +65,20 @@ const AppContent = () => {
         </nav>
       )}
 
-      <Routes>
-        {/* Public Routes */}
-        <Route path="/" element={<TableComponent />} />
-        <Route path="/form" element={<DataForm />} />
-        <Route path="/about" element={<About />} />
-        <Route path="/login" element={<Login />} />
+      <Suspense fallback={<div>Loading...</div>}>
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/" element={<TableComponent />} />
+          <Route path="/form" element={<DataForm />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/login" element={<Login />} />
 
-        {/* Private Routes */}
-        <Route element={<ProtectedRoute />}>
-          <Route path="/dataList" element={<DataList />} />
-        </Route>
-      </Routes>
+          {/* Private Routes */}
+          <Route element={<ProtectedRoute />}>
+            <Route path="/dataList" element={<DataList />} />
+          </Route>
+        </Routes>
+      </Suspense>
     </div>
   );
 };
@@ -88,47 +90,3 @@ const App = () => (
 );
 
 export default App;
-
-// import React from "react";
-// import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-// import { DataProvider } from "./context/DataContext";
-
-// import TableComponent from "./components/Data-Table";
-// import DataForm from "./components/Data-Table";
-// import About from "./components/About";
-// // import DataList from "./admin-page/DataList";
-// // import Login from "./admin-page/Login";
-// import PublicRoute from "./components/auth/Public-Route";
-// // import PrivateRoute from "./components/auth/Private-Route";
-// import PublicLayout from "./components/auth/Public-Route";
-// // import AdminLayout from "./components/auth/AdminLayout";
-
-// const App = () => (
-//   <DataProvider>
-//     <Router>
-//       <Routes>
-//         {/* Public Routes */}
-//         <Route path="/" element={<PublicLayout />}>
-//           <Route index element={<PublicRoute element={<TableComponent />} />} />
-//           <Route path="form" element={<PublicRoute element={<DataForm />} />} />
-//           <Route path="about" element={<PublicRoute element={<About />} />} />
-//           {/* <Route
-//             path="list"
-//             element={<PrivateRoute element={<DataList />} />}
-//           /> */}
-//         </Route>
-
-//         {/* Admin Routes */}
-//         {/* <Route path="/admin" element={<AdminLayout />}>
-//           <Route path="login" element={<Login />} />
-//           <Route
-//             path="list"
-//             element={<PrivateRoute element={<DataList />} />}
-//           />
-//         </Route> */}
-//       </Routes>
-//     </Router>
-//   </DataProvider>
-// );
-
-// export default App;
